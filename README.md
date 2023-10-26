@@ -37,7 +37,8 @@ public class MNS260MI_GUID
 }
 ```
 
-Retour un objet M3Reponse. Il retourne la donnée sous trois formats :
+La méthode GetData retourne un objet M3Reponse.<br/>
+La réponse de l'api retourne la donnée sous trois formats :
  -  Data : correspond au type <T> passer à GetData
  -  DataRaw : la donnée brute récupérer au format Json de l'api
  -  M3Record : est un dictionnaire clé, valeur.
