@@ -3,7 +3,7 @@ Projet connecteur API M3 en .net 6
 Libraire de communication avec M3.
 
 Exemple utilisation :
-
+```c#
 //Déclaration des class utilisées.
 
 public class MNS260MI_CRA
@@ -35,7 +35,7 @@ public class MNS260MI_GUID
          }
      }
 }
-
+```
 
 Retour un objet M3Reponse. Il retourne la donnée sous trois formats :
  -  Data : correspond au type <T> passer à GetData
