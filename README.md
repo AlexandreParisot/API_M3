@@ -1,6 +1,6 @@
 # API_M3
-Projet connecteur API M3 en .net 6
-Libraire de communication avec M3.
+Projet connecteur API M3 en .net 6 <br/>
+Libraire de communication avec les API M3.
 
 Exemple utilisation :
 ```c#
