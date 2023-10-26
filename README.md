@@ -3,7 +3,9 @@ Projet connecteur API M3 en .net 6
 Libraire de communication avec M3.
 
 Exemple utilisation :
+
 //Déclaration des class utilisées.
+
 public class MNS260MI_CRA
 {
     public string DONR { get; set; }
