@@ -6,9 +6,14 @@ using System.Text.RegularExpressions;
 
 namespace ApiM3Connector
 {
+
+
     static public class M3Client
     {
         private static ClientConfiguration m3RestConfiguration;
+
+        public static Dictionary<string, object> myRecord = new Dictionary<string, object>();
+        public static string LastErreur = string.Empty;
 
         public static void  SetConnectorM3(string user, string password, string url)
         {
@@ -19,6 +24,20 @@ namespace ApiM3Connector
             m3RestConfiguration.Password = password;
             m3RestConfiguration.ServiceUrl = url;
         }
+
+
+        public static async Task<M3Response> GetDataAsync(string program, string transaction)
+        {
+            return await Task.Run(() => { return GetData<Dictionary<string, string>>(program, transaction, myRecord, true); });
+        }
+
+        public static async Task<M3Response> SetDataAsync(string program, string transaction)
+        {
+            var res = await Task.Run(() => { return GetData<bool>(program, transaction, myRecord, true); });
+            res.Data = (string.IsNullOrEmpty(res.Message) ? true : false);
+            return res;
+        }
+
 
 
         public static async Task<M3Response> GetDataAsync<T>(string program, string transaction, object queryParam, bool outputAllFields = false, int maxrecs = 0, bool metadata = false, bool excludempty = false)
@@ -48,6 +67,7 @@ namespace ApiM3Connector
                 {
                     m3Response.Success = false;
                     m3Response.Message = program + "/" + transaction + ": M3 appel en erreur.";
+                    LastErreur = m3Response.Message;
                     return m3Response;
                 }
 
@@ -57,6 +77,7 @@ namespace ApiM3Connector
                 {
                     m3Response.Success = false;
                     m3Response.Message = program + "/" + transaction + ": " + m3ErrorMessage;
+                    LastErreur = m3Response.Message;
                     return m3Response;
                 }
 
@@ -113,9 +134,10 @@ namespace ApiM3Connector
         }
 
 
-        private static Dictionary<string, string> GetValueDictionaryFromM3Result(JObject jObject, bool metadata)
+        private static List<Dictionary<string, string>> GetValueDictionaryFromM3Result(JObject jObject, bool metadata)
         {
-            Dictionary<string, string> dictionary = new Dictionary<string, string>();
+            List<Dictionary<string, string>> records = new List<Dictionary<string, string>>();
+
             try
             {
                 int index = (metadata ? 3 : 2);
@@ -123,6 +145,7 @@ namespace ApiM3Connector
                 new List<object>();
                 foreach (JsonParent jsonParent in array)
                 {
+                    Dictionary<string, string> dictionary = new Dictionary<string, string>();
                     if (jsonParent.NameValue != null)
                     {
                         foreach (var jsonChild in jsonParent.NameValue)
@@ -131,10 +154,8 @@ namespace ApiM3Connector
                             {
                                 try
                                 {
-                                    if(!dictionary.ContainsKey(jsonChild.Name.ToString()))
-                                        dictionary.Add(jsonChild.Name.ToString(), jsonChild.Value.ToString());
-                                    else
-                                        dictionary[jsonChild.Name.ToString()] = jsonChild.Value.ToString();
+                                    // var pair = JsonConvert.DeserializeObject<KeyValuePair<string, string>>(jsonChild.Value.TrimEnd(Array.Empty<char>()));
+                                    dictionary.Add(jsonChild.Name.ToString(), jsonChild.Value.ToString());
                                 }
                                 catch (Exception ex)
                                 {
@@ -142,15 +163,16 @@ namespace ApiM3Connector
                                 }
                             }
                         }
+                        records.Add(dictionary);
                     }
                     else if (jsonParent.RowIndex != null)
                     {
-                        if (!dictionary.ContainsKey(nameof(jsonParent.RowIndex)))
-                            dictionary.Add(nameof(jsonParent.RowIndex), jsonParent.RowIndex.ToString());
+                        dictionary.Add(nameof(jsonParent.RowIndex), jsonParent.RowIndex.ToString());
+                        records.Add(dictionary);
                     }
 
                 }
-                return dictionary;
+                return records;
             }
             catch (Exception ex)
             {
@@ -158,6 +180,7 @@ namespace ApiM3Connector
                 return null;
             }
         }
+
 
         private static List<T> GetValueListFromM3ResultByMultipleSelectors<T>(JObject jObject, IList<string> keys, bool metadata)
         {
@@ -191,7 +214,6 @@ namespace ApiM3Connector
                 return null;
             }
         }
-
         private static string GetM3ErrorMessage(string text)
         {
             string result = null;
@@ -199,13 +221,13 @@ namespace ApiM3Connector
             {
                 if (text == null)
                 {
-                    return "Pas de reponse depuis M3";
+                    return "No response from M3";
                 }
 
                 dynamic val = JObject.Parse(text);
                 if (val == null)
                 {
-                    return "Pas de reponse depuis M3";
+                    return "No response from M3";
                 }
 
                 dynamic val2 = val.Property("MIRecord");
@@ -221,10 +243,11 @@ namespace ApiM3Connector
 
                 return result;
             }
-            catch (Exception ex)
+            catch (Exception)
             {
-                return $"Erreur pendant la réponse depuis M3. {ex.Message}";
+                return "Error while reading response from M3";
             }
         }
+
     }
 }

@@ -14,13 +14,13 @@ namespace ApiM3Connector.Util
 
         public dynamic Data { get; set; }
 
-        public Dictionary<string, string> M3Records { get; set; }
+        public List<Dictionary<string, string>> M3Records { get; set; }
 
         public string DataRaw { get; set; }
         public M3Response()
         {
             Success = true;
-            M3Records = new Dictionary<string, string>();
+            M3Records = new();
         }
     }
 }
